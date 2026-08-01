@@ -6,6 +6,9 @@ on:
       - '3.16'
     paths:
       - .github/workflows/run-russian-translation.yml
+  pull_request:
+    branches:
+      - '3.16'
   workflow_dispatch:
 
 permissions:
