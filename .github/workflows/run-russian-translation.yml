@@ -40,7 +40,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p .github/scripts
-          gh api repos/${{ github.repository }}/git/blobs/1ed1cadecc981bededcb237054b71a6a9e1045fc --jq .content \
+          gh api repos/${{ github.repository }}/git/blobs/241f3b5d660b9b939da1d6c7867b247840fec3c7 --jq .content \
             | tr -d '\n' \
             | base64 --decode \
             > .github/scripts/translate_docs_ru.py
