@@ -56,6 +56,8 @@ jobs:
               'token = "ZXQ" + hashlib.sha1(value.encode("utf-8")).hexdigest()[:12].upper() + "QXZ"',
               'token = "zxq" + hashlib.sha1(value.encode("utf-8")).hexdigest()[:12] + "qxz"',
           )
+          text = text.replace('len(batch) < 12', 'len(batch) < 50')
+          text = text.replace('candidate_size > 1000', 'candidate_size > 4000')
           path.write_text(text)
           PY
           python -m py_compile .github/scripts/translate_docs_ru.py
