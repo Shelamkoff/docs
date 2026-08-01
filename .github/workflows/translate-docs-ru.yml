@@ -1,0 +1,74 @@
+name: Build Russian documentation
+
+on:
+  push:
+    branches:
+      - agent/russian-translation
+    paths:
+      - .github/workflows/translate-docs-ru.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: russian-documentation-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  translate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Check out translation branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/russian-translation
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Restore translation script
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p .github/scripts
+          gh api repos/${{ github.repository }}/git/blobs/3d725af740f444407b3e1e97cbd652f9e9c1a7bf --jq .content \
+            | tr -d '\n' \
+            | base64 --decode \
+            > .github/scripts/translate_docs_ru.py
+          python -m py_compile .github/scripts/translate_docs_ru.py
+
+      - name: Install translation engine
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install argostranslate==1.9.6
+
+      - name: Rebuild Russian documentation
+        run: python .github/scripts/translate_docs_ru.py
+
+      - name: Validate repository diff
+        run: |
+          git diff --check
+          test -f docs/ru/manifest.json
+          python -m json.tool docs/ru/manifest.json >/dev/null
+          python -m json.tool languages.json >/dev/null
+
+      - name: Commit generated localization
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm -f .github/workflows/translate-docs-ru.yml
+          git add -A docs/ru languages.json context.yaml .github/workflows/translate-docs-ru.yml
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+          else
+            git commit -m 'Complete Russian documentation translation'
+            git push origin HEAD:agent/russian-translation
+          fi
