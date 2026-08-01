@@ -15,8 +15,8 @@ permissions:
   contents: write
 
 concurrency:
-  group: russian-documentation-rebuild
-  cancel-in-progress: false
+  group: russian-documentation-${{ github.event_name }}
+  cancel-in-progress: true
 
 jobs:
   translate:
